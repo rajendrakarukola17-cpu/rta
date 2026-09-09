@@ -2,6 +2,7 @@
 # Office Suite v7.2 — Docker Compose
 # =============================================================================
 # Target: Oracle ARM Always Free VM (24GB RAM, 200GB storage)
+# Status: Phase 1 Complete - Core Backend Foundation
 # =============================================================================
 
 version: "3.9"
@@ -89,6 +90,14 @@ services:
       - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
       - TYPESENSE_HOST=${TYPESENSE_HOST}
       - QDRANT_HOST=${QDRANT_HOST}
+      # Cloud Storage Services (optional)
+      - CLOUDINARY_ENABLED=${CLOUDINARY_ENABLED:-false}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - BOX_ENABLED=${BOX_ENABLED:-false}
+      - BOX_CLIENT_ID=${BOX_CLIENT_ID}
+      - BOX_CLIENT_SECRET=${BOX_CLIENT_SECRET}
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
@@ -98,6 +107,50 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+    volumes:
+      - ./backend/app:/app/app
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - CLOUDINARY_ENABLED=${CLOUDINARY_ENABLED:-false}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - BOX_ENABLED=${BOX_ENABLED:-false}
+      - BOX_CLIENT_ID=${BOX_CLIENT_ID}
+      - BOX_CLIENT_SECRET=${BOX_CLIENT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./worker/app:/app/app
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 30s

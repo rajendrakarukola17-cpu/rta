@@ -1,115 +1,61 @@
-# Environment
-.env
-.env.local
-.env.*.local
-*.env
-!.env.example
-
-# Secrets
-secrets/
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
-*.jks
-id_rsa
-id_ed25519
-known_hosts
-
-# Python
+```
+# Dependencies
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
 .Python
-*.egg-info/
-.eggs/
-dist/
-build/
-.venv/
-venv/
 env/
-.python-version
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
+venv/
+.venv/
+.ENV
+.ENV.*
+.env
+.env.*
+requirements-local.txt
+requirements-dev.txt
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Build artifacts
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
 .coverage
-coverage.xml
+coverage/
 htmlcov/
-
-# Node / frontend
-node_modules/
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/
-frontend/.turbo/
-frontend/.cache/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Docker / runtime data
-docker/data/
-volumes/
-pgdata/
-redisdata/
-minio-data/
-typesense-data/
-qdrant-data/
-grafana-data/
-loki-data/
-authentik-data/
-cryptpad-data/
-dendrite-data/
-n8n-data/
+.pytest_cache/
+.hypothesis/
 
 # Logs
-logs/
 *.log
+
+# Environment specific
+.env.local
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Editors
-.idea/
-.vscode/
-*.swp
-*.swo
-*.sublime-project
-*.sublime-workspace
-
-# Ansible
-*.retry
-ansible/*.retry
-ansible/inventory.prod.yml
-ansible/inventory.production.yml
-
-# Backup artifacts
-backups/
-tmp/
-scratch/
-restore-drill/
-
-# Cloudflare
-.cloudflare/
-wrangler.toml
-.wrangler/
-
-# Local database dumps
-*.sql
-*.dump
-*.sqlite
-*.sqlite3
-
-# Temporary files
-tmp*
-temp*
-*.tmp
-
-# Qwen local generation state
-.qwen/cache/
-.qwen/tmp/
-.next/
+```
