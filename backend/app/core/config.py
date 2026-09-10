@@ -18,6 +18,16 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     SECRET_KEY: str = Field(..., env="SECRET_KEY")
     
+    # JWT Authentication
+    JWT_SECRET_KEY: str = Field(..., env="JWT_SECRET_KEY")
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    BCRYPT_ROUNDS: int = 12
+    
+    # CORS
+    CORS_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000", env="CORS_ORIGINS")
+    
     # Database
     DATABASE_URL: str = Field(..., env="DATABASE_URL")
     POSTGRES_USER: str = Field(default="office_user", env="POSTGRES_USER")
