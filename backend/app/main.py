@@ -13,6 +13,7 @@ from .core.config import settings
 from .services.minio_service import minio_service
 from .services.cloudinary_service import cloudinary_service
 from .services.box_storage_service import box_service
+from .api.auth import router as auth_router
 
 
 @asynccontextmanager
@@ -40,11 +41,14 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=settings.CORS_ORIGINS.split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(auth_router, prefix="/api/v1")
 
 
 @app.get("/")
