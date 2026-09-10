@@ -1,115 +1,151 @@
 # Office Suite v7.2
 
-Production-ready internal office platform based on Architecture v7.2-final.
+A self-hosted office suite with multi-cloud storage orchestration, designed for Oracle ARM Always Free VM.
 
-## Core stack
+## Status: Phase 1 Complete ✅
 
-- Backend: FastAPI + SQLAlchemy + Pydantic v2
-- Worker: Celery
-- Database: PostgreSQL
-- Cache: Redis
-- Object storage: MinIO
-- Search: Typesense + PostgreSQL FTS + Qdrant
-- Chat: Dendrite / Matrix
-- Collaboration: CryptPad
-- SSO: Authentik
-- Reverse proxy: Traefik
-- OCR: PaddleOCR
-- Monitoring: Grafana + Loki
-- Frontend: React + TypeScript + Vite + Tailwind + shadcn/ui
-- Frontend hosting: Cloudflare Pages
-- VM target: Oracle ARM Always Free VM
+**Core Backend Foundation** - FastAPI backend with basic storage service integrations is now implemented.
 
-## Architecture constraints
+## What's Implemented
 
-- MongoDB is removed.
-- Rocket.Chat is removed.
-- PostgreSQL is the single durable source of truth.
-- Redis is ephemeral only.
-- Typesense and Qdrant are derived search indexes.
-- MinIO is hot object storage.
-- Cloudflare R2, Backblaze B2, and Storj are colder storage tiers.
-- Human approval is required for AI-generated public content.
-- Tapal routing proposals require human confirmation.
-- PII redaction fails closed.
-- Backups must be encrypted and restore-tested.
+### Backend Services (Phase 1)
+- ✅ **FastAPI Application** (`backend/app/main.py`)
+- ✅ **Configuration Management** (`backend/app/core/config.py`)
+- ✅ **Database Layer** (`backend/app/core/database.py`)
+- ✅ **Data Models** (`backend/app/models/__init__.py`)
+- ✅ **MinIO Service** - Primary local storage (S3-compatible)
+- ✅ **Cloudinary Service** - Media processing (25GB free tier)
+- ✅ **Box Service** - Enterprise document storage (10GB free tier)
+- ✅ **Celery Worker** - Background task processing
 
-## Repository layout
+### Infrastructure
+- ✅ PostgreSQL with pgvector
+- ✅ Redis (for Celery broker/cache)
+- ✅ MinIO (local S3-compatible storage)
+- ✅ Docker Compose configuration
+- ✅ Health checks and monitoring endpoints
 
-```text
-office-suite-v7/
-├── README.md
-├── Makefile
-├── .env.example
-├── docker-compose.yml
-├── docker/
-├── scripts/
-├── ansible/
-├── backend/
-├── worker/
-├── crawler/
-├── frontend/
-├── docs/
-└── .qwen/
-```
+## Quick Start
 
-## Local development
-
+### 1. Clone and Configure
 ```bash
+git clone <repository>
+cd office-suite
 cp .env.example .env
-# Edit .env and fill in placeholder values
-docker compose config
-docker compose up -d traefik postgres redis minio typesense qdrant
+# Edit .env with your credentials
 ```
 
-## Production deployment
-
-Primary server path:
-
-```text
-/opt/office-suite-v7
+### 2. Start services
+```bash
+docker-compose up -d postgres redis minio
+docker-compose up -d fastapi worker
 ```
 
-Typical production commands:
+### 3. Verify
+```bash
+curl http://localhost:8000/health
+```
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | API information |
+| `/health` | GET | Health check |
+| `/api/v1/storage/services` | GET | List configured storage services |
+| `/api/v1/storage/stats` | GET | Storage usage statistics |
+
+## Storage Services
+
+### Currently Implemented
+1. **MinIO** - Primary hot storage (unlimited local)
+2. **Cloudinary** - Media optimization (25GB free)
+3. **Box** - Enterprise documents (10GB free)
+
+### Planned (Future Phases)
+- pCloud, Mega Cloud, ImageKit
+- Backblaze B2, Cloudflare R2, Storj
+- IBM COS, Tigris, Neon, Sia
+- Box Dev Edition, Vercel Blob
+
+## Architecture
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Frontend  │────▶│  FastAPI     │────▶│  PostgreSQL │
+│   (Vite)    │     │  Backend     │     │  + pgvector │
+└─────────────┘     └──────────────┘     └─────────────┘
+                          │
+                    ┌─────┴─────┐
+                    ▼           ▼
+             ┌──────────┐  ┌──────────┐
+             │  MinIO   │  │  Redis   │
+             │ (Local)  │  │ (Cache)  │
+             └──────────┘  └──────────┘
+                    │
+             ┌──────┴──────┐
+             ▼             ▼
+       ┌──────────┐  ┌──────────┐
+       │Cloudinary│  │   Box    │
+       │ (Media)  │  │ (Docs)   │
+       └──────────┘  └──────────┘
+```
+
+## Development
+
+### Backend Structure
+```
+backend/
+├── app/
+│   ├── api/          # API routes
+│   ├── core/         # Config, database
+│   ├── models/       # SQLAlchemy models
+│   ├── services/     # Storage service integrations
+│   └── utils/        # Utilities
+├── requirements.txt
+└── Dockerfile
+```
+
+### Running Tests
+```bash
+cd backend
+pip install -r requirements.txt
+pytest
+```
+
+## Configuration
+
+See `.env.example` for all available environment variables. Key settings:
 
 ```bash
-make health
-make up
-make logs
-make backup-postgres
-make restore-drill
+# Required
+SECRET_KEY=your-secret-key
+POSTGRES_PASSWORD=secure-password
+REDIS_PASSWORD=secure-redis-password
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=secure-minio-password
+
+# Optional - Cloud Services
+CLOUDINARY_ENABLED=true
+CLOUDINARY_CLOUD_NAME=your-cloud
+BOX_ENABLED=true
+BOX_CLIENT_ID=your-client-id
 ```
 
-## Frontend deployment
+## Next Steps (Phase 2)
 
-The frontend is deployed to Cloudflare Pages.
-
-Build output directory:
-
-```text
-frontend/dist
-```
-
-Environment variables for the frontend build should point to the public API domain.
-
-## Important operational rules
-
-1. PostgreSQL backups must succeed nightly.
-2. Restore drill must run weekly and fail loudly.
-3. OCR workers must be memory-limited and isolated.
-4. Search indexes must be rebuildable from PostgreSQL.
-5. Admin dashboards must not be publicly exposed.
-6. Secrets must never be committed.
-7. AI output must be treated as draft until approved.
+1. Implement file upload/download endpoints
+2. Add authentication and user management
+3. Implement remaining storage services
+4. Add automatic fallback logic
+5. Build frontend application
 
 ## Documentation
 
-See:
+- `IMPLEMENTATION_STATUS.md` - Detailed status of implemented vs planned features
+- `ARCHITECTURE.md` - System architecture documentation
+- `docker-compose.yml` - Service definitions
 
-```text
-docs/deployment.md
-docs/runbook.md
-docs/backup-restore.md
-docs/pilot-plan.md
-docs/api.md
-```
+## License
+
+MIT License
